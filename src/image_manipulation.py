@@ -1,6 +1,6 @@
-import numpy as np
+import logging
 from typing import List, Tuple
-from matplotlib import image
+from PIL import Image as PILImage
 
 
 class Image(object):
@@ -19,24 +19,26 @@ class Image(object):
         super().__init__()
 
     @staticmethod
-    def load_image(file_name: str) -> image:
-        return image.imread(file_name)
+    def load_image(file_name: str) -> PILImage:
+        im = PILImage.open(file_name)
+        logging.info(f'Filename {file_name} loaded.\n      Format: {im.size}, {im.format}, {im.mode}')
+        return im
 
     @staticmethod
-    def cut_to_size(image: image) -> image:
+    def cut_to_size(image: PILImage) -> PILImage:
         # Takes a matplotlib-image and cuts it to size by removing the dark parts
         # which are top and bottom of the image.
         # Returns a matplotlib-image again, which should only contain the tiles.
         return image
 
     @staticmethod
-    def count_tiling(image: image) -> Tuple[int, int]:
+    def count_tiling(image: PILImage) -> Tuple[int, int]:
         # Takes an image and by counting the different colours per row and column
         # determines the amount of different tiles we have.
         return (1, 1)
 
     @staticmethod
-    def get_fixed_tile_positions(image: image, tiling: Tuple[int, int]) -> List[Tuple[int, int]]:
+    def get_fixed_tile_positions(image: PILImage, tiling: Tuple[int, int]) -> List[Tuple[int, int]]:
         # From the image and based on the tiling-information, determine which of the tiles are
         # fixed and which are movable. The fixed ones have a dark spot in the middle.
         return [(0, 0), (0, 1)]
