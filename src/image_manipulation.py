@@ -1,12 +1,12 @@
 import logging
+import numpy as np
 from typing import List, Tuple
 from PIL import Image as PILImage
 
 
 class Image(object):
-    # VERY ingenuous class to handle all things related to an image,
-    # like loading, cutting it to size and extracting the amount of
-    # tiles, fixed and moveable.
+    # VERY ingenuous class name for a class to handle all things related to an image,
+    # like loading, cutting it to size and extracting the amount of tiles, fixed and moveable.
 
     def __init__(self, file_name) -> None:
         self.image = self.cut_to_size(
@@ -29,7 +29,17 @@ class Image(object):
         # Takes a matplotlib-image and cuts it to size by removing the dark parts
         # which are top and bottom of the image.
         # Returns a matplotlib-image again, which should only contain the tiles.
-        return image
+        pix = np.asarray(image)
+
+        for pixel in get_background_pixels(pix):
+            single_colour_rows = is_single_colour(
+                pix, 
+                target_colour=pixel,
+                majority_vote_threshold=0.95,
+            )
+            pix = pix[~single_colour_rows, :, :]
+
+        return PILImage.fromarray(pix)
 
     @staticmethod
     def count_tiling(image: PILImage) -> Tuple[int, int]:
@@ -42,3 +52,48 @@ class Image(object):
         # From the image and based on the tiling-information, determine which of the tiles are
         # fixed and which are movable. The fixed ones have a dark spot in the middle.
         return [(0, 0), (0, 1)]
+
+
+# ======================== Some helper methods
+
+def get_background_pixels(image_array: np.ndarray) -> Tuple[np.ndarray]:
+    # Identifies the background pixels of an image by assuming that the first and the last
+    # pixel are background.
+    # The first pixel in a phone screenshot is the background of the head-bar, which is totally black.
+    # The last pixel in a phone screenshot it the background of the app itself, which is usually not totally black.
+    return image_array[0, 0, :], image_array[-1, -1, :]
+
+def is_single_colour(
+    matrix: np.ndarray,
+    axis: int = 0,
+    target_colour: np.ndarray = np.asarray([0, 0, 0]),
+    majority_vote_threshold: float = 1.00,
+) -> np.ndarray:
+    """
+    This function determines whether a given row (axis = 0) or column (axis = 1) 
+    is made up mostly of a given colour.
+
+    :param matrix: Image matrix of shape (m, n, 3).
+    :param axis: Axis along which to analyse. Chose axis = 0 = row or axis = 1 = column.
+    :param target_colour: Colour-value to compare against.
+    :param majority_vote_threshold: Sets the threshold of which share of colours has to be close to the
+        target colour such that the aggregated dimension is considered as "single-colour".
+    
+    Example: 
+    1) If you chose axis = 0 and majority_vote = 1.00, you search along each row, meaning that your output will
+    be an array of the shape of (m,), indicating in which row all colours are matching the target colour.
+    2) If you chose axis = 1 and majority_vote = 0.50, you search along each column, meaning that your output will
+    be an array of the shape of (n,), indicating in which column at least 50% of the pixels match the target colour.
+    """
+    # First we calculate the pixel-wise equality for the complete matrix and aggregate it
+    # for each colour value. The result will be a matrix where we have pixel-wise values
+    # of 0, 1/3, 2/3 or 1, depending on how many colour elements of that pixel match the
+    # target colour.
+    mask = np.abs(matrix == target_colour).mean(axis=2)
+
+    # We are only interested in exact matches, so we discard anything below 1:
+    matches = np.isclose(mask, 1.0)
+
+    # We now need aggregate along the axis of which we want to get the majority-vote on:
+    aggregation_axis = 1 if axis == 0 else 0
+    return matches.mean(axis=aggregation_axis) >= majority_vote_threshold
