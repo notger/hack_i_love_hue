@@ -77,3 +77,31 @@ class TestImageManipulation(unittest.TestCase):
                 target_colour=white
             ).mean()
         )
+
+    def test_is_single_colour_array_with_continuous_colours(self):
+        # We want to test the colour-distance-threshold, so we want to generate a matrix of size
+        # (10, 255, 3) with continuously increasing colours from left to right.
+        # So it starts out all black left and then goes via the greyscale to white on the right.
+        continuous_colour_matrix = np.zeros((10, 255, 3), dtype=int)
+        for k in range(3):
+            continuous_colour_matrix[:, :, k] = np.linspace(0, 255, 255, dtype=int)
+
+        # With a continuous matrix like this, for a target colour black, we expect 50% to be 
+        # within a mean distance of 127 or less. So for a majority vote threshold of 0.5 and
+        # a colour_distance_threshold of 127, we should get all lines being labelled as being
+        # sufficiently close to "black".
+        self.assertAlmostEqual(
+            1.0,
+            is_single_colour(
+                continuous_colour_matrix, colour_distance_threshold=127, majority_vote_threshold=0.5
+            ).mean()
+        )
+
+        # If we lower the colour-distance-threshold, but keep the 50% requirement, we should get
+        # no lines being labelled as black:
+        self.assertAlmostEqual(
+            0.0,
+            is_single_colour(
+                continuous_colour_matrix, colour_distance_threshold=126, majority_vote_threshold=0.5
+            ).mean()
+        )

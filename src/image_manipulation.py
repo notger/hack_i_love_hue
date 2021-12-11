@@ -39,6 +39,8 @@ class Image(object):
             )
             pix = pix[~single_colour_rows, :, :]
 
+            logging.debug(f'Cut image to size: {pix.shape}, removed all lines with colour {pixel}.')
+
         return PILImage.fromarray(pix)
 
     @staticmethod
@@ -67,6 +69,7 @@ def is_single_colour(
     matrix: np.ndarray,
     axis: int = 0,
     target_colour: np.ndarray = np.asarray([0, 0, 0]),
+    colour_distance_threshold: float = 40.0,
     majority_vote_threshold: float = 1.00,
 ) -> np.ndarray:
     """
@@ -76,6 +79,9 @@ def is_single_colour(
     :param matrix: Image matrix of shape (m, n, 3).
     :param axis: Axis along which to analyse. Chose axis = 0 = row or axis = 1 = column.
     :param target_colour: Colour-value to compare against.
+    :param colour_distance_threshold: How far away in terms of mean channel difference to the target
+        colour do we allow each pixel to be and still count it as "same"? Can go from 0 (exact match)
+        to 255 (every colour is counted as a match)
     :param majority_vote_threshold: Sets the threshold of which share of colours has to be close to the
         target colour such that the aggregated dimension is considered as "single-colour".
     
@@ -84,15 +90,13 @@ def is_single_colour(
     be an array of the shape of (m,), indicating in which row all colours are matching the target colour.
     2) If you chose axis = 1 and majority_vote = 0.50, you search along each column, meaning that your output will
     be an array of the shape of (n,), indicating in which column at least 50% of the pixels match the target colour.
-    """
-    # First we calculate the pixel-wise equality for the complete matrix and aggregate it
-    # for each colour value. The result will be a matrix where we have pixel-wise values
-    # of 0, 1/3, 2/3 or 1, depending on how many colour elements of that pixel match the
-    # target colour.
-    mask = np.abs(matrix == target_colour).mean(axis=2)
-
-    # We are only interested in exact matches, so we discard anything below 1:
-    matches = np.isclose(mask, 1.0)
+    """    
+    # Calculate the colour-distance for each pixel:
+    delta_colour = np.abs(matrix - target_colour).mean(axis=2)
+    
+    # We are only interested in matches which are sufficiently close to the target colour,
+    # indicated by colour_distance_threshold.
+    matches = delta_colour <= colour_distance_threshold
 
     # We now need aggregate along the axis of which we want to get the majority-vote on:
     aggregation_axis = 1 if axis == 0 else 0

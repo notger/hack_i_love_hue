@@ -8,3 +8,4 @@ logging.basicConfig(
 )
 
 image = Image(file_name='images/test1.jpeg')
+image.image.show()
