@@ -6,12 +6,12 @@ from src.image_manipulation import PILImage, Image, get_background_pixels, get_b
 class TestImageManipulation(unittest.TestCase):
 
     def setUp(self) -> None:
-        self.image_path = 'images/default-2021-12-07-205120.jpeg'
+        self.image_path = 'images/test1.jpeg'
         return super().setUp()
 
     def test_load_image(self):
         self.assertIsNotNone(Image(self.image_path))
-        self.assertIsNotNone(Image.load_image('images/default-2021-12-07-205120.jpeg'))
+        self.assertIsNotNone(Image.load_image(self.image_path))
 
     def test_cut_to_size(self):
         image = PILImage.open(self.image_path)

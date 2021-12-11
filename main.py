@@ -7,4 +7,4 @@ logging.basicConfig(
     format='%(levelname)s: %(message)s'
 )
 
-image = Image(file_name='images/default-2021-12-07-205120.jpeg')
+image = Image(file_name='images/test1.jpeg')
