@@ -20,12 +20,6 @@ class TestImageManipulation(unittest.TestCase):
         for k, size in enumerate(image.size):
             self.assertGreaterEqual(size, image_cut_to_size.size[k])
 
-    # def test_count_tiling(self):
-    #     self.assertTrue(False)
-
-    # def test_get_fixed_tile_positions(self):
-    #     self.assertTrue(False)
-
     def test_get_background_pixel(self):
         # Let's test this with an established picture right away.
         # Alternatively, you can set up a synthetic test at some point.
@@ -105,3 +99,13 @@ class TestImageManipulation(unittest.TestCase):
                 continuous_colour_matrix, colour_distance_threshold=126, majority_vote_threshold=0.5
             ).mean()
         )
+
+    def test_count_tiling(self):
+        image = PILImage.open(self.image_path)
+        self.assertEqual(
+            (10, 10),
+            Image.count_tiling(image)
+        )
+
+    # def test_get_fixed_tile_positions(self):
+    #     self.assertTrue(False)

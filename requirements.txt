@@ -1,1 +1,4 @@
+logging
+numpy
 Pillow
+typing
