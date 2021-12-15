@@ -51,13 +51,8 @@ class Image(object):
         # determines the amount of different tiles we have.
         # We have to do this with a Fourier-analysis of the rows/columns, as the screenshots 
         # come in as lossily compressed images with lots of noise.
-        # As the frequencies might not be given as integers, we will have to do some magic
-        # in here as well and convert them to what we want to know.
-        major_frequencies = get_major_frequencies_from_matrix(np.asarray(image))
-
-        # TBD:
-        tiling = [round(f) - 1 for f in major_frequencies]
-        return tiling
+        # As we want to look at colour changes, we take the man colour values as indicator for that.
+        return [round(f) for f in get_major_frequencies_from_matrix(np.asarray(image).mean(axis=2))]
 
     @staticmethod
     def get_fixed_tile_positions(image: PILImage, tiling: Tuple[int, int]) -> List[Tuple[int, int]]:
