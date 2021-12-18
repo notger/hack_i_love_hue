@@ -7,6 +7,7 @@ class TestImageManipulation(unittest.TestCase):
 
     def setUp(self) -> None:
         self.image_path = 'images/test1.jpeg'
+        self.image_path2 = 'images/test2.jpeg'
         return super().setUp()
 
     def test_load_image(self):
@@ -109,6 +110,13 @@ class TestImageManipulation(unittest.TestCase):
         self.assertEqual(
             [10, 8],
             Image.count_tiling(image.image)
+        )
+
+        image2 = Image(self.image_path2)
+
+        self.assertEqual(
+            [11, 9],
+            Image.count_tiling(image2.image)
         )
 
     # def test_get_fixed_tile_positions(self):
