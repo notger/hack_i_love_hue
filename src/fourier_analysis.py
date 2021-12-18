@@ -1,7 +1,8 @@
 import numpy as np
+import typing
 
 
-def get_major_frequencies_from_matrix(m: np.ndarray) -> float:
+def get_major_frequencies_from_matrix(m: np.ndarray) -> typing.Tuple[float]:
     # We do this by taking the one-pixel-shifted-differences as a simple edge-detector
     # and then analyse the main frequencies in row and columns.
     # The first value returned is the main frequency along the first dimension, so along

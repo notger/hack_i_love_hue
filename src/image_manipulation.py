@@ -2,6 +2,7 @@ import logging
 import numpy as np
 from typing import List, Tuple
 from PIL import Image as PILImage
+from PIL import ImageFilter as PILImageFilter
 
 from .fourier_analysis import get_major_frequencies_from_matrix
 
@@ -46,13 +47,18 @@ class Image(object):
         return PILImage.fromarray(pix)
 
     @staticmethod
-    def count_tiling(image: PILImage) -> Tuple[int, int]:
+    def count_tiling(image: PILImage) -> List[int]:
         # Takes an image and by counting the different colours per row and column
         # determines the amount of different tiles we have.
         # We have to do this with a Fourier-analysis of the rows/columns, as the screenshots 
         # come in as lossily compressed images with lots of noise.
         # As we want to look at colour changes, we take the man colour values as indicator for that.
-        return [round(f) for f in get_major_frequencies_from_matrix(np.asarray(image).mean(axis=2))]
+        filtered_matrix = np.asarray(
+            image.filter(PILImageFilter.FIND_EDGES)
+        ).mean(axis=2)
+
+        # Return half of the found frequencies, as those seem to indicate the number of tiles:
+        return [int(round(f)) // 2 for f in get_major_frequencies_from_matrix(filtered_matrix)]
 
     @staticmethod
     def get_fixed_tile_positions(image: PILImage, tiling: Tuple[int, int]) -> List[Tuple[int, int]]:

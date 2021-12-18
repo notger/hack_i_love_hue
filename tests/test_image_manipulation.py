@@ -101,10 +101,14 @@ class TestImageManipulation(unittest.TestCase):
         )
 
     def test_count_tiling(self):
-        image = PILImage.open(self.image_path)
+        # We can not test the tiling-count in isolation, as we need to cut it down.
+        # But we do not have a cut-down picture. So we are testing the chain of cutting and
+        # identifying the tiling here, unfortunately:
+        image = Image(self.image_path)
+
         self.assertEqual(
-            (10, 10),
-            Image.count_tiling(image)
+            [10, 8],
+            Image.count_tiling(image.image)
         )
 
     # def test_get_fixed_tile_positions(self):
