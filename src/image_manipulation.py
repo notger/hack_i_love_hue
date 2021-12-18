@@ -57,8 +57,8 @@ class Image(object):
             image.filter(PILImageFilter.FIND_EDGES)
         ).mean(axis=2)
 
-        # Return half of the found frequencies, as those seem to indicate the number of tiles:
-        return [int(round(f)) // 2 for f in get_major_frequencies_from_matrix(filtered_matrix)]
+        # Get the main frequencies and round them, to get the tiling count:
+        return [int(round(f)) for f in get_major_frequencies_from_matrix(filtered_matrix)]
 
     @staticmethod
     def get_fixed_tile_positions(image: PILImage, tiling: Tuple[int, int]) -> List[Tuple[int, int]]:
