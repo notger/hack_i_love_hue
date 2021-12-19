@@ -119,5 +119,19 @@ class TestImageManipulation(unittest.TestCase):
             Image.count_tiling(image2.image)
         )
 
-    # def test_get_fixed_tile_positions(self):
-    #     self.assertTrue(False)
+    def test_get_fixed_tile_positions(self):
+        image = Image(self.image_path)
+
+        # The first test image has the dots all around the rim.
+        self.assertEqual(
+            set([(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8), (0, 9), (1, 0), (1, 9), (2, 0), (2, 9), (3, 0), (3, 9), (4, 0), (4, 9), (5, 0), (5, 9), (6, 0), (6, 9), (7, 0), (7, 1), (7, 2), (7, 3), (7, 4), (7, 5), (7, 6), (7, 7), (7, 8), (7, 9)]),
+            set(image.fixed_tiles),
+        )
+
+        image2 = Image(self.image_path2)
+
+        # The second test image has the dots only in the first and last row (dims: 9 x 11 tiles).
+        self.assertEqual(
+            set([(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0), (8, 0), (0, 10), (1, 10), (2, 10), (3, 10), (4, 10), (5, 10), (6, 10), (7, 10), (8, 10)]),
+            set(image2.fixed_tiles),
+        )

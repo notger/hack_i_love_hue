@@ -8,5 +8,4 @@ logging.basicConfig(
 )
 
 image = Image(file_name='images/test1.jpeg')
-image.image.show()
-image.get_tile(2, 1).show()
+#image.image.show()

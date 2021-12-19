@@ -3,6 +3,7 @@ import numpy as np
 from typing import List, Tuple
 from PIL import Image as PILImage
 from PIL import ImageFilter as PILImageFilter
+from numpy.core.fromnumeric import shape
 
 from .fourier_analysis import get_major_frequencies_from_matrix
 
@@ -17,7 +18,7 @@ class Image(object):
         )
 
         self.tiling = self.count_tiling(self.image)
-        self.fixed_tiles = self.get_fixed_tile_positions(self.image, self.tiling)
+        self.fixed_tiles = self.get_fixed_tile_positions()
 
         super().__init__()
 
@@ -60,6 +61,8 @@ class Image(object):
         # Get the main frequencies and round them, to get the tiling count:
         tiling = [int(round(f)) for f in get_major_frequencies_from_matrix(filtered_matrix)]
 
+        logging.info(f'Detected tiling: {tiling[-1::-1]}.')
+
         # However, the axis-order is flipped between PIL and numpy, so we flip it around:
         return [tiling[1], tiling[0]]
 
@@ -75,11 +78,52 @@ class Image(object):
         lower = (tile_y + 1) * row_width
         return self.image.crop((left, upper, right, lower))
 
-    @staticmethod
-    def get_fixed_tile_positions(image: PILImage, tiling: Tuple[int, int]) -> List[Tuple[int, int]]:
+    def get_fixed_tile_positions(self) -> List[Tuple[int, int]]:
         # From the image and based on the tiling-information, determine which of the tiles are
         # fixed and which are movable. The fixed ones have a dark spot in the middle.
-        return [(0, 0), (0, 1)]
+        # The dark dots have pixel colour values in the 30's and it can be assumed that there is
+        # a certain colour-distance to the rest of the somewhat uniformly coloured tile.
+        fixed_tiles = [
+            (i, j)  
+            for j in range(self.tiling[1])
+            for i in range(self.tiling[0]) 
+            if self.tile_has_dot(
+                self.get_tile(i, j)
+            )
+        ]
+
+        logging.info(f'Detected {len(fixed_tiles)} dotted tiles.')
+
+        return fixed_tiles
+
+    @staticmethod
+    def tile_has_dot(tile: PILImage) -> bool:
+        # We do spot checks in five positions, one of which is the center-point.
+        # We require all to be reasonably close to each other.
+        pic = np.asarray(tile).astype(int)
+
+        offsets = [s // 10 for s in pic.shape[:2]]
+
+        # Build the array to check for single-colouredness by choosing four points
+        # slightly inset from the four corners and the center-point.
+        # Note: We could also take the complete row or column and use that, but we
+        # can not be completely sure how many pixels in there would be dark in the
+        # dot-case, so choosing the majority-vote-threshold would be a bit brittle.
+        # The dot-size might depend on the screen resolution. However, choosing the
+        # five points as we do here is rather robust and gives the correct results.
+        pixels = np.asarray([
+            pic[offsets[0], offsets[1], :],
+            pic[offsets[0], pic.shape[1] - offsets[1], :],
+            pic[pic.shape[0] - offsets[0], offsets[1], :],
+            pic[pic.shape[0] - offsets[0], pic.shape[1] - offsets[1], :],
+            pic[pic.shape[0] // 2, pic.shape[1] // 2, :],
+        ], dtype=int).reshape((-1, 1, 3))
+
+        # Check whether all five entries of the generated array are of a single colour.
+        # If not, then we have a tile.
+        return not is_single_colour(
+            pixels, axis=1, target_colour=pixels[0, 0, :], colour_distance_threshold=20.0, majority_vote_threshold=0.90
+        )
 
 
 # ======================== Some helper methods
@@ -118,7 +162,7 @@ def is_single_colour(
     be an array of the shape of (n,), indicating in which column at least 50% of the pixels match the target colour.
     """    
     # Calculate the colour-distance for each pixel:
-    delta_colour = np.abs(matrix - target_colour).mean(axis=2)
+    delta_colour = np.abs(matrix.astype(int) - target_colour).mean(axis=2)
     
     # We are only interested in matches which are sufficiently close to the target colour,
     # indicated by colour_distance_threshold.
