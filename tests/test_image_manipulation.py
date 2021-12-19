@@ -108,14 +108,14 @@ class TestImageManipulation(unittest.TestCase):
         image = Image(self.image_path)
 
         self.assertEqual(
-            [10, 8],
+            [8, 10],
             Image.count_tiling(image.image)
         )
 
         image2 = Image(self.image_path2)
 
         self.assertEqual(
-            [11, 9],
+            [9, 11],
             Image.count_tiling(image2.image)
         )
 

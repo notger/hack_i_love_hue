@@ -58,7 +58,22 @@ class Image(object):
         ).mean(axis=2)
 
         # Get the main frequencies and round them, to get the tiling count:
-        return [int(round(f)) for f in get_major_frequencies_from_matrix(filtered_matrix)]
+        tiling = [int(round(f)) for f in get_major_frequencies_from_matrix(filtered_matrix)]
+
+        # However, the axis-order is flipped between PIL and numpy, so we flip it around:
+        return [tiling[1], tiling[0]]
+
+    def get_tile(self, tile_x: int, tile_y: int) -> PILImage:
+        # Returns an image of the tile at position (x_pos, y_pos).
+        # We are using the axis-ordering from PIL.
+        # First calculate the corner points of the respective rectangle:
+        column_width = self.image.size[0] / self.tiling[0]
+        row_width = self.image.size[1] / self.tiling[1]
+        left = tile_x * column_width
+        upper = tile_y * row_width
+        right = (tile_x + 1) * column_width
+        lower = (tile_y + 1) * row_width
+        return self.image.crop((left, upper, right, lower))
 
     @staticmethod
     def get_fixed_tile_positions(image: PILImage, tiling: Tuple[int, int]) -> List[Tuple[int, int]]:
