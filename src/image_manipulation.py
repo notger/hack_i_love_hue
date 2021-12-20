@@ -3,7 +3,6 @@ import numpy as np
 from typing import List, Tuple
 from PIL import Image as PILImage
 from PIL import ImageFilter as PILImageFilter
-from numpy.core.fromnumeric import shape
 
 from .fourier_analysis import get_major_frequencies_from_matrix
 
@@ -19,6 +18,7 @@ class Image(object):
 
         self.tiling = self.count_tiling(self.image)
         self.fixed_tiles = self.get_fixed_tile_positions()
+        self.tile_colours = self.get_tile_colours()
 
         super().__init__()
 
@@ -125,6 +125,19 @@ class Image(object):
             pixels, axis=1, target_colour=pixels[0, 0, :], colour_distance_threshold=20.0, majority_vote_threshold=0.90
         )
 
+    def get_tile_colours(self) -> np.ndarray:
+        # For each of the identified tiles above, we determine the major colour and store
+        # it in a matrix as a look-up. We will use the PIL-axis-notation for consistency,
+        # not the flipped notation that a transformation to numpy normally would give.
+        majority_colours = np.zeros((self.tiling[0], self.tiling[1], 3), dtype=int)
+
+        for col in range(self.tiling[0]):
+            for row in range(self.tiling[1]):
+                majority_colours[col, row, :] = get_majority_colour(
+                    self.get_tile(col, row)
+                )
+
+        return majority_colours
 
 # ======================== Some helper methods ===================================================
 
