@@ -126,7 +126,7 @@ class Image(object):
         )
 
 
-# ======================== Some helper methods
+# ======================== Some helper methods ===================================================
 
 def get_background_pixels(image_array: np.ndarray) -> Tuple[np.ndarray]:
     # Identifies the background pixels of an image by assuming that the first and the last
@@ -171,3 +171,17 @@ def is_single_colour(
     # We now need aggregate along the axis of which we want to get the majority-vote on:
     aggregation_axis = 1 if axis == 0 else 0
     return matches.mean(axis=aggregation_axis) >= majority_vote_threshold
+
+def get_majority_colour(image: PILImage) -> np.ndarray:
+    """
+    Returns the most prevalent colour, without regard for closeness.
+    """
+    # Count all unique colour-channel instances after transformin the image into a 
+    # matrix and that matrix into a list:
+    pixel_list = np.asarray(image).reshape((-1, 3))
+    vals, counts = np.unique(pixel_list, axis=0, return_counts=True)
+    majority_colour = vals[np.argmax(counts)]
+
+    logging.debug(f'Identified majority colour {majority_colour} with a count of {counts.max()} / {len(pixel_list)} = {100 * counts.max() / len(pixel_list):.1f} %.')
+
+    return majority_colour
