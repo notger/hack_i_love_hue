@@ -135,3 +135,23 @@ class TestImageManipulation(unittest.TestCase):
             set([(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0), (8, 0), (0, 10), (1, 10), (2, 10), (3, 10), (4, 10), (5, 10), (6, 10), (7, 10), (8, 10)]),
             set(image2.fixed_tiles),
         )
+
+    def test_majority_colour_identification(self):
+        # For the first test image, the colours have to be ascending along the rim:
+        image = Image(self.image_path)
+
+        # For the second test image, the colours have to be ascending along the first and the last row:
+        image2 = Image(self.image_path2)
+
+        def test_ascending_tiling(im, row=0):
+            # Ascending tile colour means the colours go from light to dark.
+            # Number-wise it means that the next element along a row has lower
+            # colour-channel values, so the difference of element k to k-1 is overall negative.
+            for k in range(1, image.tiling[0]):
+                colour_diff = image.tile_colours[k, row] - image.tile_colours[k - 1, row]
+                return colour_diff.sum() < 0
+
+        self.assertTrue(test_ascending_tiling(image, row=0))
+        self.assertTrue(test_ascending_tiling(image, row=-1))
+        self.assertTrue(test_ascending_tiling(image2, row=0))
+        self.assertTrue(test_ascending_tiling(image2, row=-1))
