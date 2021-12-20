@@ -147,8 +147,8 @@ class TestImageManipulation(unittest.TestCase):
             # Ascending tile colour means the colours go from light to dark.
             # Number-wise it means that the next element along a row has lower
             # colour-channel values, so the difference of element k to k-1 is overall negative.
-            for k in range(1, image.tiling[0]):
-                colour_diff = image.tile_colours[k, row] - image.tile_colours[k - 1, row]
+            for k in range(1, im.tiling[0]):
+                colour_diff = im.tile_colours[k, row] - im.tile_colours[k - 1, row]
                 return colour_diff.sum() < 0
 
         self.assertTrue(test_ascending_tiling(image, row=0))
