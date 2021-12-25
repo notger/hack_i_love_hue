@@ -43,12 +43,20 @@ def _calculate_delta_to_reference_tiles(
     """
     return sum([np.abs(tile_colours - tile_colours[ref_tile[0], ref_tile[1], :]) for ref_tile in reference_tiles]).mean(axis=2) / len(reference_tiles)
     
-def _extract_target_tile_and_colour(deltas: np.ndarray, fixed_tiles_mask: np.ndarray) -> Tuple[List[int], np.ndarray]:
+def _extract_target_tile_coordinates(
+    deltas: np.ndarray, 
+    fixed_tiles_mask: np.ndarray
+) -> Tuple[int, int]:
     """
-    Returns the tile's coordinate and colour with the lowest difference in the delta-matrix.
+    Returns the tile's coordinate with the lowest difference in the delta-matrix.
     """
-    # TODO
-    return None
+    # Isolate the eligible cells by setting the delta-values to very high values where the tiles are fixed.
+    # This prevents us identifying a fixed tiles as the one with the lowest difference:
+    tmp = deltas.copy()
+    tmp[np.where(fixed_tiles_mask > 0.5)] = 1e5
+
+    location = np.unravel_index(np.argmin(tmp), tmp.shape)
+    return location
 
 def find_final_ordering(image: Image) -> np.ndarray:
     """
@@ -71,7 +79,16 @@ def find_final_ordering(image: Image) -> np.ndarray:
     final_ordering = np.zeros((image.tiling[0], image.tiling[1], 2))
     final_colouring = np.zeros((image.tiling[0], image.tiling[1], 3))
 
-    # TODO: Also handle fixed tiles and put them in the final ordering, for cleanliness' sake.
+    # TODO
+    for i in range(image.tiling[0]):
+        for j in range(image.tiling[1]):
+            if (i, j) in image.fixed_tiles:
+                final_ordering[i, j, 0] = i
+                final_ordering[i, j, 1] = j
+                final_colouring[i, j, :] = image.tile_colours[i, j, :]
+
+            else:
+                pass
 
     return final_ordering, final_colouring
 

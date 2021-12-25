@@ -1,9 +1,11 @@
 import unittest
 import numpy as np
+from numpy.lib.type_check import _asfarray_dispatcher
 from src.puzzle_solver import (
     _generate_fixed_tiles_mask, 
     _find_reference_tiles,
     _calculate_delta_to_reference_tiles,
+    _extract_target_tile_coordinates,
 )
 
 
@@ -66,3 +68,25 @@ class TestPuzzleSolver(unittest.TestCase):
 
         # And it should of course have the correct shape:
         self.assertEqual((4, 4), deltas.shape)
+
+    def test_extract_target_tiles_coordinates(self):
+        deltas = np.asarray(
+            [
+                [1, 2, 3],
+                [4, 5, 6],
+                [7, 8, 9]
+            ],
+            dtype=float,
+        )
+
+        mask = np.asarray(
+            [
+                [1, 1, 1],
+                [1, 0, 0],
+                [0, 0, 1]
+            ],
+            dtype=int,
+        )
+
+        self.assertEqual((1, 1), _extract_target_tile_coordinates(deltas, mask))
+        self.assertEqual((2, 1), _extract_target_tile_coordinates(-deltas, mask))
