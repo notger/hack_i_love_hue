@@ -6,12 +6,16 @@ from src.puzzle_solver import (
     _find_reference_tiles,
     _calculate_delta_to_reference_tiles,
     _extract_target_tile_coordinates,
+    find_final_ordering,
 )
+from src.image_manipulation import Image
 
 
 class TestPuzzleSolver(unittest.TestCase):
 
     def setUp(self) -> None:
+        self.image_path1 = 'images/test1.jpeg'
+        self.image_path2 = 'images/test2-jpeg'
         return super().setUp()
 
     def test_fixed_tiles_mask(self):
@@ -90,3 +94,38 @@ class TestPuzzleSolver(unittest.TestCase):
 
         self.assertEqual((1, 1), _extract_target_tile_coordinates(deltas, mask))
         self.assertEqual((2, 1), _extract_target_tile_coordinates(-deltas, mask))
+
+    def test_find_final_ordering(self):
+        # Let's load an image to create the necessary structure:
+        image = Image(self.image_path1)
+
+        # But let's overwrite the values in there to make for a more easily controlled experiment.
+        # We want a simple 3x3 image with some random colours, but the first and the last cell
+        # should be black and white, respectively.
+        image.fixed_tiles = [(0, 0), (2, 2)]
+        image.tiling = (3, 3)
+        image.tile_colours = np.asarray(
+            [
+                [[0, 0, 0], [240, 240, 240], [40, 40, 40]], 
+                [[120, 120, 120], [200, 200, 200], [80, 80, 80]], 
+                [[160, 160, 160], [100, 100, 100], [255, 255, 255]]
+            ]
+        )
+        target_ordering = np.asarray(
+            [
+                [[0, 0], [0, 2], [1, 2]],
+                [[2, 1], [1, 0], [2, 0]],
+                [[1, 1], [0, 1], [2, 2]]
+            ]
+        )
+
+        final_ordering, final_colouring = find_final_ordering(image)
+
+        # For the test, we want to look at the flattened array, where all colours are averaged.
+        # In that array, all the colours have to increase, which means each colour has a larger
+        # value than the last one:
+        flattened_colouring = final_colouring.mean(axis=2).flatten()
+        self.assertTrue((flattened_colouring[1:] - flattened_colouring[:-1] > 0).all())
+
+        # Compare the ordering-matrices:
+        self.assertTrue((target_ordering == final_ordering).all())

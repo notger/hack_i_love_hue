@@ -3,6 +3,15 @@ import numpy as np
 from typing import List, Tuple
 from .image_manipulation import Image
 
+# DEBUG:
+# Set up logging:
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(logging.Formatter('%(name)s - %(levelname)s: %(message)s'))
+logger = logging.getLogger('puzzle_solver')
+logger.setLevel('DEBUG')
+logger.addHandler(console_handler)
+logger.propagate = False
+
 
 def _generate_fixed_tiles_mask(
     fixed_tiles_tuple_list: List[Tuple[int, int]], 
@@ -52,9 +61,8 @@ def _extract_target_tile_coordinates(
     """
     # Isolate the eligible cells by setting the delta-values to very high values where the tiles are fixed.
     # This prevents us identifying a fixed tiles as the one with the lowest difference:
-    tmp = deltas.copy()
-    tmp[np.where(fixed_tiles_mask > 0.5)] = 1e5
-
+    tmp = deltas + 1e5 * fixed_tiles_mask
+    
     location = np.unravel_index(np.argmin(tmp), tmp.shape)
     return location
 
@@ -72,23 +80,81 @@ def find_final_ordering(image: Image) -> np.ndarray:
     The result are two matrices which indicate the original position and colour value
     at the supposed final position. This can be used by the step-generator of the solver
     to determine the best swapping order. 
+
+    Known weaknesses / TODO: If the problem is not solvable from the top left to the bottom right,
+    then the approach chosen here fails. E.g. if there are no fixed tiles in the cells
+    (0, 0), (0, 1) or (1, 0).
     """
     # Generate a numpy array with the same dimensions as the tiling from the image, but 
     # two entries in the 3rd dimension which will contain the coordinates / colours. 
     # This will make assignments and read-outs easier, later.
-    final_ordering = np.zeros((image.tiling[0], image.tiling[1], 2))
-    final_colouring = np.zeros((image.tiling[0], image.tiling[1], 3))
+    N_i, N_j = image.tiling
+    final_ordering = -np.ones((N_i, N_j, 2), dtype=int)
+    final_colouring = -np.ones((N_i, N_j, 3), dtype=int)
 
-    # TODO
-    for i in range(image.tiling[0]):
-        for j in range(image.tiling[1]):
+    mask = _generate_fixed_tiles_mask(image.fixed_tiles, image.tiling)
+
+    # We will need to keep a ledger on all tiles already fixed or determined,
+    # as tiles we already know about become "fixed tiles" in the sense of our
+    # puzzle solver. This requires that we copy the fixed tiles to have it 
+    # manipulatable without side effects.
+    fixed_tiles_list = image.fixed_tiles[:]
+    
+    # Create a lookup which translates from new to old coordinates such that the
+    # new coordinates are the keys and the old coordinates are the values: D[new] = old
+    new_to_old_lookup = {}
+
+    # Create the initial seeding by copying over the fixed tiles and their colour values:
+    for i in range(N_i):
+        for j in range(N_j):
+            # Where the tile comes from that should be in position (i, j) depends on
+            # whether the tile is fixed or not. For fixed tiles, we just copy the tile,
+            # for swappable tiles, we find the one with the closest difference to the
+            # reference tiles:
             if (i, j) in image.fixed_tiles:
+                # Assign the source position and colours to the target and note the fixed
+                # tiles in the list of already processed tiles:
                 final_ordering[i, j, 0] = i
                 final_ordering[i, j, 1] = j
                 final_colouring[i, j, :] = image.tile_colours[i, j, :]
+                new_to_old_lookup[(i, j)] = (i, j)
+                
+    # Now deal with the movable tiles:
+    for i in range(N_i):
+        for j in range(N_j):
+            if (i, j) not in fixed_tiles_list:
+                reference_tiles = _find_reference_tiles(i, j, fixed_tiles_list)
+                
+                # What would the reference tiles' coordinates be in the original image?
+                reference_tiles_old_coordinates = [new_to_old_lookup[(i, j)] for (i, j) in reference_tiles]
+                
+                # Calculate the deltas of all the colours in the original image to the reference colours
+                # indexed by the old coordinate frame:
+                deltas = _calculate_delta_to_reference_tiles(reference_tiles_old_coordinates, image.tile_colours)
 
-            else:
-                pass
+                # Extract the tile with the lowest distance, assuming the fixed-point-mask given in the old
+                # coordinates:
+                k, l = _extract_target_tile_coordinates(deltas, mask)
+
+                # Assign the source position and colours to the target:
+                final_ordering[i, j, 0] = k
+                final_ordering[i, j, 1] = l
+                final_colouring[i, j, :] = image.tile_colours[k, l, :]
+
+                # Register the newly swapped in colour in the mask:
+                new_to_old_lookup[(i, j)] = (k, l)
+                mask[k, l] = 1.0
+                fixed_tiles_list.append((i, j))
+
+                # # DEBUG:
+                # logger.debug('')
+                # logger.debug(f'{(i, j)}: <- {(k, l)}')
+                # logger.debug(f'Reference tiles used: {reference_tiles}')
+                # logger.debug(f'Reference tiles are now: {fixed_tiles_list}')
+                # logger.debug(f'Lookup old to new: {new_to_old_lookup}')
+                # #logger.debug(f'Tiling is now: {final_ordering}')
+                # logger.debug(f'Deltas used: {deltas}')
+                # logger.debug(f'Mask: {mask}')
 
     return final_ordering, final_colouring
 
