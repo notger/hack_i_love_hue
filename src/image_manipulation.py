@@ -20,6 +20,7 @@ class Image(object):
     # like loading, cutting it to size and extracting the amount of tiles, fixed and moveable.
 
     def __init__(self, file_name) -> None:
+        self.file_name = file_name
         self.image = self.cut_to_size(
             self.load_image(file_name)
         )

@@ -7,23 +7,10 @@ from .image_manipulation import Image
 console_handler = logging.StreamHandler()
 console_handler.setFormatter(logging.Formatter('%(name)s - %(levelname)s: %(message)s'))
 logger = logging.getLogger('puzzle_solver')
-logger.setLevel('DEBUG')
+logger.setLevel('INFO')
 logger.addHandler(console_handler)
 logger.propagate = False
 
-
-class Solution(object):
-
-    def __init__(self, initial_ordering, initial_colouring, final_ordering, final_colouring) -> None:
-        super().__init__()
-        self.initial_ordering = initial_ordering
-        self.initial_colouring = initial_colouring
-        self.final_ordering = final_ordering
-        self.final_colouring = final_colouring
-        self.steps = []
-
-    def solve(self, solver):
-        self.steps = solver()
 
 def _generate_fixed_tiles_mask(
     fixed_tiles_tuple_list: List[Tuple[int, int]], 
