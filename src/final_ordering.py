@@ -3,7 +3,6 @@ import numpy as np
 from typing import List, Tuple
 from .image_manipulation import Image
 
-# DEBUG:
 # Set up logging:
 console_handler = logging.StreamHandler()
 console_handler.setFormatter(logging.Formatter('%(name)s - %(levelname)s: %(message)s'))
@@ -12,6 +11,19 @@ logger.setLevel('DEBUG')
 logger.addHandler(console_handler)
 logger.propagate = False
 
+
+class Solution(object):
+
+    def __init__(self, initial_ordering, initial_colouring, final_ordering, final_colouring) -> None:
+        super().__init__()
+        self.initial_ordering = initial_ordering
+        self.initial_colouring = initial_colouring
+        self.final_ordering = final_ordering
+        self.final_colouring = final_colouring
+        self.steps = []
+
+    def solve(self, solver):
+        self.steps = solver()
 
 def _generate_fixed_tiles_mask(
     fixed_tiles_tuple_list: List[Tuple[int, int]], 
@@ -146,15 +158,12 @@ def find_final_ordering(image: Image) -> np.ndarray:
                 mask[k, l] = 1.0
                 fixed_tiles_list.append((i, j))
 
-                # # DEBUG:
-                # logger.debug('')
-                # logger.debug(f'{(i, j)}: <- {(k, l)}')
-                # logger.debug(f'Reference tiles used: {reference_tiles}')
-                # logger.debug(f'Reference tiles are now: {fixed_tiles_list}')
-                # logger.debug(f'Lookup old to new: {new_to_old_lookup}')
-                # #logger.debug(f'Tiling is now: {final_ordering}')
-                # logger.debug(f'Deltas used: {deltas}')
-                # logger.debug(f'Mask: {mask}')
+                logging.debug(f'Checked for position {(i, j)}: Target is originally at {(k, l)}.')
+
+            else:
+                logging.debug(f'Checked for position {(i, j)}: Fixed tile, nothing to do.')
+
+    logging.info('Created final ordering.')
 
     return final_ordering, final_colouring
 

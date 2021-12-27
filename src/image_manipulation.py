@@ -6,6 +6,14 @@ from PIL import ImageFilter as PILImageFilter
 
 from .fourier_analysis import get_major_frequencies_from_matrix
 
+# Set up logging:
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(logging.Formatter('%(name)s - %(levelname)s: %(message)s'))
+logger = logging.getLogger('image_manipulation')
+logger.setLevel('INFO')
+logger.addHandler(console_handler)
+logger.propagate = False
+
 
 class Image(object):
     # VERY ingenuous class name for a class to handle all things related to an image,
@@ -25,7 +33,7 @@ class Image(object):
     @staticmethod
     def load_image(file_name: str) -> PILImage:
         im = PILImage.open(file_name)
-        logging.info(f'Filename {file_name} loaded.\n      Format: {im.size}, {im.format}, {im.mode}')
+        logger.info(f'Filename {file_name} loaded.\n      Format: {im.size}, {im.format}, {im.mode}')
         return im
 
     @staticmethod
@@ -43,7 +51,7 @@ class Image(object):
             )
             pix = pix[~single_colour_rows, :, :]
 
-            logging.debug(f'Cut image to size: {pix.shape}, removed all lines with colour {pixel}.')
+            logger.debug(f'Cut image to size: {pix.shape}, removed all lines with colour {pixel}.')
 
         return PILImage.fromarray(pix)
 
@@ -61,7 +69,7 @@ class Image(object):
         # Get the main frequencies and round them, to get the tiling count:
         tiling = [int(round(f)) for f in get_major_frequencies_from_matrix(filtered_matrix)]
 
-        logging.info(f'Detected tiling: {tiling[-1::-1]}.')
+        logger.info(f'Detected tiling: {tiling[-1::-1]}.')
 
         # However, the axis-order is flipped between PIL and numpy, so we flip it around:
         return [tiling[1], tiling[0]]
@@ -92,7 +100,7 @@ class Image(object):
             )
         ]
 
-        logging.info(f'Detected {len(fixed_tiles)} dotted tiles.')
+        logger.info(f'Detected {len(fixed_tiles)} dotted tiles.')
 
         return fixed_tiles
 
@@ -195,6 +203,6 @@ def get_majority_colour(image: PILImage) -> np.ndarray:
     vals, counts = np.unique(pixel_list, axis=0, return_counts=True)
     majority_colour = vals[np.argmax(counts)]
 
-    logging.debug(f'Identified majority colour {majority_colour} with a count of {counts.max()} / {len(pixel_list)} = {100 * counts.max() / len(pixel_list):.1f} %.')
+    logger.debug(f'Identified majority colour {majority_colour} with a count of {counts.max()} / {len(pixel_list)} = {100 * counts.max() / len(pixel_list):.1f} %.')
 
     return majority_colour

@@ -1,7 +1,6 @@
 import unittest
 import numpy as np
-from numpy.lib.type_check import _asfarray_dispatcher
-from src.puzzle_solver import (
+from final_ordering import (
     _generate_fixed_tiles_mask, 
     _find_reference_tiles,
     _calculate_delta_to_reference_tiles,
