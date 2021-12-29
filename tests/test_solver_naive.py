@@ -18,5 +18,16 @@ class TestNaiveMethod(unittest.TestCase):
         self.assertTrue(self.solution.initial_state.is_sane())
         self.assertTrue(self.solution.final_state.is_sane())
         for state in self.solution.steps:
-            print(state)
+
+            # DEBUG:
+            # debug-log:
+            # - der Test, der scheitert, ist der, der Doppelung der Koordinaten entdeckt
+            if not state.is_sane():
+                print(state)
+                print(state.ordering)
+
+
             self.assertTrue(state.is_sane())
+
+        # Has the final state reached the final ordering?
+        # TODO

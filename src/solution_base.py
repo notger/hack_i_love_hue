@@ -5,7 +5,7 @@ check whether a given solution gives sensible results.
 """
 import logging
 import numpy as np
-from numpy.testing._private.utils import raises
+from collections import Counter
 from .final_ordering import find_final_ordering
 from .image_manipulation import Image
 
@@ -64,7 +64,10 @@ class State(object):
         self.idx = idx
 
     def __str__(self) -> str:
-        return f'State with index {self.idx}.'
+        is_sane = self.is_sane()
+        s = f'State with index {self.idx} is {"NOT" if not is_sane else ""} sane.'
+        s += '' if is_sane else f'\nDetected duplicates: {self.get_duplicates()}'
+        return s
 
     def is_sane(self):
         """
@@ -75,26 +78,32 @@ class State(object):
         As the index is optional given it can be inferred from the ordering
         of the state in a list, it is not a criterion for sanity.
         """
-        # Check a): Are all coordinate pairs generated unique?
-        # We flatten the coordinate matrix and reshape it, to create an
-        # array of the coordinate pairs and then get the set of those.
-        # The number of items in that set has to match the number of 
-        # items in the flatted matrix.
-        flattened_coordinates = self.ordering.flatten().reshape((-1, 2)).tolist()
-        flattened_coordinates_set = set(
-            [(i, j) for i, j in flattened_coordinates]  # We have to do this, as lists are not hashable.
-        )
-        coordinates_are_unique = len(flattened_coordinates) == len(flattened_coordinates_set)
+        duplicates = self.get_duplicates()
+        return len(duplicates['coord_pair_duplicates']) == 0 and len(duplicates['colour_duplicates']) == 0
 
-        # Check b): Is every colour unique?
-        # Same approach as above.
-        flattened_colours = self.colouring.flatten().reshape((-1, 3)).tolist()
-        flattened_colours_set = set(
-            [(c1, c2, c3) for c1, c2, c3 in flattened_colours]
+    def get_duplicates(self):
+        # As we want to check for coord/colour-tuples and as lists are not hashable and thus
+        # can not be used in the Counter-object, we have to first flatten the matrices to arrays,
+        # such that a matrix (N, M, x) becomes an array (N*M, x). We then convert to a list and from
+        # there to a tuple, which we can then use in the Counter-class.
+        coord_counter_dict = Counter(
+            [
+                tuple(coord_pair) 
+                for coord_pair 
+                in self.ordering.flatten().reshape((-1, 2)).tolist()
+            ]
         )
-        colours_are_unique = len(flattened_colours) == len(flattened_colours_set)
-
-        return coordinates_are_unique & colours_are_unique
+        colour_counter_dict = Counter(
+            [
+                tuple(colour) 
+                for colour 
+                in self.colouring.flatten().reshape((-1, 3)).tolist()
+            ]
+        )
+        return {
+            'coord_pair_duplicates': [k for k, v in coord_counter_dict.items() if v >= 2],
+            'colour_duplicates': [k for k, v in colour_counter_dict.items() if v >= 2]
+        }
 
 
 def create_initial_ordering(ordering_template):
