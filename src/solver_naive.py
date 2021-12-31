@@ -12,7 +12,7 @@ from .solution_base import State, create_initial_ordering
 console_handler = logging.StreamHandler()
 console_handler.setFormatter(logging.Formatter('%(name)s - %(levelname)s: %(message)s'))
 logger = logging.getLogger('solver_naive')
-logger.setLevel('DEBUG')
+logger.setLevel('INFO')
 logger.addHandler(console_handler)
 logger.propagate = False
 
@@ -24,7 +24,7 @@ def naive_method(
 
     states = []
     ordering = create_initial_ordering(final_ordering)
-
+    
     # Create the colouring matrix to work on:
     colouring = initial_colouring.copy()
 
@@ -38,13 +38,32 @@ def naive_method(
                 # the ordering-matrix needs to agree with the final-ordering at (i, j)
                 # and the former entry in (i, j) has to be moved to the (k, l)-position.
                 k, l = final_ordering[i, j, :].tolist()
+                
+                # Find the source coordinates, i.e. where in ordering does the element (k, j)
+                # currently reside?
+                i_in, j_in = tuple(
+                    np.argwhere(
+                        (ordering[:, :, 0] == k) * (ordering[:, :, 1] == l)
+                    ).flatten().tolist()
+                )
+
+                logger.debug(f'----------------------------Switching step {len(states)}-------------------------')
+                logger.debug(f'At tile {(i, j)}, we expect to be tile {(k, l)}.')
+                logger.debug(f'Tile {(k, l)} can currently be found at position {(i_in, j_in)}.')
+                logger.debug(f'Before switching, ordering looks like this: {ordering}')
+
+                # Do the switches, ...:
                 tmp = ordering[i, j, :].copy()
-                ordering[i, j, :] = final_ordering[i, j, :]
-                ordering[k, l, :] = tmp.copy()
+                ordering[i, j, :] = ordering[i_in, j_in, :]
+                ordering[i_in, j_in, :] = tmp.copy()
 
                 tmp = colouring[i, j, :].copy()
-                colouring[i, j, :] = colouring[k, l, :]
-                colouring[k, l, :] = tmp.copy()
+                colouring[i, j, :] = colouring[i_in, j_in, :]
+                colouring[i_in, j_in, :] = tmp.copy()
+
+                # ... log the new position of the original (i, j)-element:
+                logger.debug(f'After switching, ordering looks like this: {ordering}')
+                logger.debug(f'After switching, colouring looks like this: {colouring}')
 
                 # and generate a new State and add it to the list:
                 states.append(
@@ -55,7 +74,7 @@ def naive_method(
                     )
                 )
 
-                logger.debug(f'Processed tile {(i, j)}: Swapped in tile {(k, l)}, created state number {len(states) - 1}.')
+                logger.debug(f'Processed tile {(i, j)}: Swapped in for tile {(k, l)}, created state number {len(states) - 1}.')
 
             else:
                 logger.debug(f'Processed tile {(i, j)}: Fixed tile, nothing to do.')

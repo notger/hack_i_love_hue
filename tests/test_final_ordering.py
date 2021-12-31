@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from final_ordering import (
+from src.final_ordering import (
     _generate_fixed_tiles_mask, 
     _find_reference_tiles,
     _calculate_delta_to_reference_tiles,

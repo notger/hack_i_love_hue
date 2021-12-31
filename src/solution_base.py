@@ -112,12 +112,9 @@ def create_initial_ordering(ordering_template):
     coordinates are in their original position, 
     i.e. ordering[i, j, 0] = i and ordering[i, j, 1] = j
     """
-    ordering = np.zeros_like(ordering_template, dtype=int)
-    N_i = ordering.shape[0]
-    N_j = ordering.shape[1]
-    for i in range(N_i):
-        for j in range(N_j):
-            ordering[i, j, 0] = i
-            ordering[i, j, 1] = j
+    ordering = np.asarray(
+        [(i, j) for i in range(ordering_template.shape[0]) for j in range(ordering_template.shape[1])],
+        dtype=int
+    ).reshape(ordering_template.shape)
 
     return ordering
