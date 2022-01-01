@@ -80,4 +80,7 @@ def naive_method(
             else:
                 logger.debug(f'Processed tile {(i, j)}: Fixed tile, nothing to do.')
 
+    logger.info(f'Solver reschuffled tiles in {len(states)} steps.')
+    logger.debug(f'Swapping history: {[state.swapped_elements for state in states]}')
+
     return states
