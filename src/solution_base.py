@@ -9,6 +9,7 @@ import numpy as np
 from collections import Counter
 from .final_ordering import find_final_ordering
 from .image_manipulation import Image
+from .state_visualisation import generate_solution_gif
 
 # Set up logging:
 console_handler = logging.StreamHandler()
@@ -45,6 +46,9 @@ class Solution(object):
 
     def solve(self, solver) -> None:
         self.steps = solver(self.initial_colouring, self.final_ordering)
+
+    def generate_gif(self) -> None:
+        generate_solution_gif(self)
 
     def __str__(self) -> str:
         return f'Solution for image {self.image.file_name} in {len(self.steps)} steps.'

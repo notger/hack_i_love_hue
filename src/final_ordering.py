@@ -145,12 +145,12 @@ def find_final_ordering(image: Image) -> np.ndarray:
                 mask[k, l] = 1.0
                 fixed_tiles_list.append((i, j))
 
-                logging.debug(f'Checked for position {(i, j)}: Target is originally at {(k, l)}.')
+                logger.debug(f'Checked for position {(i, j)}: Target is originally at {(k, l)}.')
 
             else:
-                logging.debug(f'Checked for position {(i, j)}: Fixed tile, nothing to do.')
+                logger.debug(f'Checked for position {(i, j)}: Fixed tile, nothing to do.')
 
-    logging.info('Created final ordering.')
+    logger.info('Created final ordering.')
 
     return final_ordering, final_colouring
 

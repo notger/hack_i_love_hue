@@ -6,19 +6,30 @@ import numpy as np
 from typing import List, Tuple
 from PIL import Image as PILImage
 from PIL import ImageDraw as PILImageDraw
-from src.solution_base import State
 
 # Set up logging:
 console_handler = logging.StreamHandler()
 console_handler.setFormatter(logging.Formatter('%(name)s - %(levelname)s: %(message)s'))
 logger = logging.getLogger('state_visualisation')
-logger.setLevel('DEBUG')
+logger.setLevel('INFO')
 logger.addHandler(console_handler)
 logger.propagate = False
 
 
-def generate_state_image(
-    state: State, 
+def generate_solution_gif(solution: 'Solution') -> None:
+    file_name = solution.image.file_name.split('/')[-1]
+    images = [_generate_state_image(step) for step in solution.steps]
+    images[0].save(
+        f'solutions/{file_name}.gif', 
+        save_all=True,
+        optimize=False, 
+        append_images=images[1:], 
+        loop=0,
+        duration=len(images),
+    )
+
+def _generate_state_image(
+    state: 'State', 
     cell_size: int = 60, 
     add_swapped_element_line: bool = True,
     swapped_element_line_colour: int = 30,
@@ -39,12 +50,12 @@ def generate_state_image(
         draw.line(
             _line_coordinates(state, cell_size), 
             fill=0,
-            width=2,
+            width=cell_size // 25,
         )
         
     return im
 
-def _line_coordinates(state, cell_size):
+def _line_coordinates(state: 'State', cell_size: int):
     """
     Returns the line coordinates in the PIL-coordinate-system.
     """
