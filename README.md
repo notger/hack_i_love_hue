@@ -13,7 +13,8 @@ I opted for a flat structure, so there is one main-file that runs the show. Ever
 Just run `python3 -m main` and you should be good. If you want to only analyse the lastest image, then add the flag `--latest`.
 
 All images you want to analyse go into the `images` sub-folder and should be of the jpeg-format. They should be made as screenshots from the phone you are playing on (in case you actually want to use this to solve a puzzle).
-You will find a slideshow of the step-by-step-solutions in the `solutions`-folder, ordered by date and filename. Just open the files in the respective subfolder with an image-viewer and navigate with the arrow keys through it. Be sure to follow the instructions minutely. If you misclick, you are done for.
+You will find a slideshow of the step-by-step-solutions in the `solutions`-folder, with a filename corresponding to the input filename. Just open the gif with a gifviewer which allows you to manually control the frames and you should be good.
+Be sure to follow the instructions minutely. If you misclick, you are done for.
 
 Please remember that this is just a little fun project I want to build around the image-part and the solution part. This means the delivering the solution to me is totally an afterthought and not the point. There are plenty of ways this could be more accessible, but given that this is for my use only, I am fine with this way.
 
