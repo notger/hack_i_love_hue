@@ -70,6 +70,7 @@ def naive_method(
                     State(
                         ordering.copy(),
                         colouring.copy(),
+                        swapped_elements=[(i, j), (i_in, j_in)],
                         idx=len(states),
                     )
                 )

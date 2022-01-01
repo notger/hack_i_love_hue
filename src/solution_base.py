@@ -4,6 +4,7 @@ They also contain integrity checks which can be used in tests as well as on-the-
 check whether a given solution gives sensible results.
 """
 import logging
+from typing import List, Tuple
 import numpy as np
 from collections import Counter
 from .final_ordering import find_final_ordering
@@ -56,11 +57,13 @@ class State(object):
         self, 
         ordering: np.ndarray, 
         colouring: np.ndarray, 
+        swapped_elements: List[Tuple] = None,
         idx: int = -1,
     ) -> None:
         super().__init__()
         self.ordering = ordering
         self.colouring = colouring
+        self.swapped_elements = swapped_elements
         self.idx = idx
 
     def __str__(self) -> str:

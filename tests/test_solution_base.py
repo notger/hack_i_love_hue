@@ -30,7 +30,7 @@ class TestState(unittest.TestCase):
         ordering_broken[-1, -1, :] = ordering_broken[0, 1, :]
         colouring_broken = colouring.copy()
         colouring_broken[-1, -1, :] = colouring_broken[0, 1, :]
-
+        
         self.assertTrue(State(ordering, colouring).is_sane())
         self.assertFalse(State(ordering_broken, colouring).is_sane())
         self.assertFalse(State(ordering, colouring_broken).is_sane())
